@@ -13,9 +13,10 @@ PROFILE_DIR = "/tmp/playwright" if '--profile' not in sys.argv else sys.argv[sys
 PORT = 5001 if '--port' not in sys.argv else int(sys.argv[sys.argv.index('--port') + 1])
 APP = flask.Flask(__name__)
 PLAY = sync_playwright().start()
-BROWSER = PLAY.chromium.launch_persistent_context(
-    user_data_dir=PROFILE_DIR,
+BROWSER = PLAY.firefox.launch_persistent_context(
+    user_data_dir="/tmp/playwright",
     headless=False,
+    java_script_enabled=True,
 )
 PAGE = BROWSER.new_page()
 
@@ -28,7 +29,8 @@ def get_input_box():
             if candidate is None:
                 candidate = textarea
             elif textarea.bounding_box().width > candidate.bounding_box().width:
-                candidate = textarea
+                if textarea.bounding_box().height >  candidate.bounding_box().height:
+                    candidate = textarea
     return candidate
 
 def is_logged_in():
@@ -48,8 +50,8 @@ def send_message(message):
 
 def get_last_message():
     """Get the latest message"""
-    page_elements = PAGE.query_selector_all(".flex.flex-col.items-center > div")
-    last_element = page_elements[-2]
+    last_element = PAGE.query_selector("#chatHistory > div:last-child > [data-testid='youchat-answer'] > [data-testid='youchat-text']")
+    #chatHistory &#62; :last-child [data-testid="youchat-text"]
     return last_element.inner_text()
 
 @APP.route("/chat", methods=["GET"])
@@ -62,12 +64,10 @@ def chat():
     return response
 
 def start_browser():
-    PAGE.goto("https://chat.openai.com/")
+    PAGE.goto("https://you.com/chat")
     APP.run(port=PORT, threaded=False)
     if not is_logged_in():
-        print("Please log in to OpenAI Chat")
-        print("Press enter when you're done")
-        input()
+        print("Something went worng!")
     else:
         print("Logged in")
         

@@ -48,18 +48,24 @@ def send_message(message):
     while PAGE.query_selector(".result-streaming") is not None:
         time.sleep(0.1)
 
-def get_last_message():
+
+def get_last_message(n):
     """Get the latest message"""
-    last_element = PAGE.query_selector("#chatHistory > div:last-child > [data-testid='youchat-answer'] > [data-testid='youchat-text']")
-    #chatHistory &#62; :last-child [data-testid="youchat-text"]
-    return last_element.inner_text()
+    print(n)
+    PAGE.wait_for_selector('[data-testid="youchat-convTurn-{}"] > div.sc-c1820906-0.bqCzbR > div > p'.format(n))
+    last_element = PAGE.query_selector('[data-testid="youchat-convTurn-{}"] > div.sc-c1820906-0.bqCzbR > div > p'.format(n))
+    n = n + 1
+    return  last_element.inner_html(), n
+
+n = 0
 
 @APP.route("/chat", methods=["GET"])
 def chat():
+    global n
     message = flask.request.args.get("q")
     print("Sending message: ", message)
     send_message(message)
-    response = get_last_message()
+    response, n = get_last_message(n)
     print("Response: ", response)
     return response
 
